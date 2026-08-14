@@ -6,11 +6,10 @@ import com.minidoodle.schedular.shared.domain.UserId;
 import com.minidoodle.schedular.slot.application.operation.SlotOperations;
 import com.minidoodle.schedular.slot.application.operation.SlotOperationsImpl;
 import com.minidoodle.schedular.slot.application.support.FakeSlotRepository;
-import com.minidoodle.schedular.slot.application.usecase.CreateSlotUseCase;
-import com.minidoodle.schedular.slot.application.usecase.DeleteSlotUseCase;
-import com.minidoodle.schedular.slot.application.usecase.UpdateSlotUseCase;
+import com.minidoodle.schedular.slot.application.usecase.*;
 import com.minidoodle.schedular.slot.domain.SlotStatus;
 import com.minidoodle.schedular.slot.domain.TimeSlot;
+import com.minidoodle.schedular.slot.domain.exception.SlotNotFoundException;
 import com.minidoodle.schedular.slot.domain.exception.SlotNotModifiableException;
 import com.minidoodle.schedular.slot.domain.exception.SlotOverlapException;
 import org.junit.jupiter.api.Test;
@@ -85,6 +84,30 @@ class SlotApplicationTest {
         assertEquals(List.of(earlier.id(), later.id()), result.stream().map(SlotView::slotId).toList());
         assertEquals(List.of(SlotView.Status.FREE, SlotView.Status.BUSY),
                 result.stream().map(SlotView::status).toList());
+    }
+
+    @Test
+    void getsASlotByIdAndRejectsAnUnknownId() {
+        FakeSlotRepository slots = new FakeSlotRepository();
+        TimeSlot slot = slots.save(slot(UserId.random(), T09, T10, SlotStatus.FREE));
+        GetSlotUseCase useCase = new GetSlotUseCase(slots);
+
+        assertEquals(slot, useCase.get(slot.id()));
+        assertThrows(SlotNotFoundException.class, () -> useCase.get(SlotId.random()));
+    }
+
+    @Test
+    void listsOnlyTheOwnersIntersectingSlotsInStartOrder() {
+        UserId owner = UserId.random();
+        FakeSlotRepository slots = new FakeSlotRepository();
+        TimeSlot later = slots.save(slot(owner, T10, T11, SlotStatus.BUSY));
+        TimeSlot earlier = slots.save(slot(owner, T09, T10, SlotStatus.FREE));
+        slots.save(slot(owner, T12, T13, SlotStatus.FREE));
+        slots.save(slot(UserId.random(), T09, T10, SlotStatus.BOOKED));
+
+        List<TimeSlot> result = new GetUserSlotsUseCase(slots).get(owner, range(T09, T12));
+
+        assertEquals(List.of(earlier.id(), later.id()), result.stream().map(TimeSlot::id).toList());
     }
 
     private static TimeSlot slot(UserId owner, Instant start, Instant end, SlotStatus status) {

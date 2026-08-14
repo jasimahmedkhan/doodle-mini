@@ -6,11 +6,14 @@ import com.minidoodle.schedular.meeting.application.support.FakeMeetingRepositor
 import com.minidoodle.schedular.meeting.application.support.InMemorySlotOperations;
 import com.minidoodle.schedular.meeting.application.usecase.BookMeetingUseCase;
 import com.minidoodle.schedular.meeting.application.usecase.CancelMeetingUseCase;
+import com.minidoodle.schedular.meeting.application.usecase.GetUserMeetingsUseCase;
 import com.minidoodle.schedular.meeting.domain.Meeting;
 import com.minidoodle.schedular.meeting.domain.Participant;
 import com.minidoodle.schedular.shared.domain.SlotId;
 import com.minidoodle.schedular.shared.domain.TimeRange;
 import com.minidoodle.schedular.shared.domain.UserId;
+import com.minidoodle.schedular.slot.application.SlotAvailabilityQuery;
+import com.minidoodle.schedular.slot.application.SlotView;
 import com.minidoodle.schedular.slot.domain.SlotStatus;
 import com.minidoodle.schedular.slot.domain.TimeSlot;
 import com.minidoodle.schedular.slot.domain.exception.SlotNotBookableException;
@@ -115,6 +118,38 @@ class MeetingApplicationTest {
         assertInstanceOf(OptimisticLockingFailureException.class, conflict.getCause());
     }
 
+    @Test
+    void listsMeetingsForTheUsersWindowInStartTimeOrder() {
+        UserId userId = UserId.random();
+        TimeRange earlyRange = range("2026-08-14T09:00:00Z", "2026-08-14T10:00:00Z");
+        TimeRange lateRange = range("2026-08-14T11:00:00Z", "2026-08-14T12:00:00Z");
+        SlotId earlySlot = SlotId.random();
+        SlotId lateSlot = SlotId.random();
+
+        Meeting earlyMeeting = Meeting.create(earlySlot, "Early", null, List.of(ALICE));
+        Meeting lateMeeting = Meeting.create(lateSlot, "Late", null, List.of(ALICE));
+        Meeting outsideWindow = Meeting.create(SlotId.random(), "Outside", null, List.of(ALICE));
+        FakeMeetingRepository meetings = new FakeMeetingRepository();
+        meetings.save(lateMeeting);
+        meetings.save(outsideWindow);
+        meetings.save(earlyMeeting);
+
+        SlotAvailabilityQuery slots = (owner, from, to) -> List.of(
+                new SlotView(lateSlot, lateRange, SlotView.Status.BOOKED),
+                new SlotView(earlySlot, earlyRange, SlotView.Status.BOOKED)
+        );
+        GetUserMeetingsUseCase useCase = new GetUserMeetingsUseCase(meetings, slots);
+
+        List<ScheduledMeeting> result = useCase.get(
+                userId,
+                Instant.parse("2026-08-14T08:00:00Z"),
+                Instant.parse("2026-08-14T13:00:00Z")
+        );
+
+        assertEquals(List.of(earlyMeeting, lateMeeting), result.stream().map(ScheduledMeeting::meeting).toList());
+        assertEquals(List.of(earlyRange, lateRange), result.stream().map(ScheduledMeeting::timeRange).toList());
+    }
+
     private static TimeSlot slot(SlotStatus status) {
         return new TimeSlot(
                 SlotId.random(),
@@ -125,6 +160,10 @@ class MeetingApplicationTest {
                 ),
                 status
         );
+    }
+
+    private static TimeRange range(String start, String end) {
+        return new TimeRange(Instant.parse(start), Instant.parse(end));
     }
 
 }

@@ -5,9 +5,7 @@ import com.minidoodle.schedular.meeting.domain.MeetingRepository;
 import com.minidoodle.schedular.shared.domain.MeetingId;
 import com.minidoodle.schedular.shared.domain.SlotId;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public final class FakeMeetingRepository implements MeetingRepository {
 
@@ -38,6 +36,13 @@ public final class FakeMeetingRepository implements MeetingRepository {
         return meetings.values().stream()
                 .filter(meeting -> meeting.slotId().equals(slotId))
                 .findFirst();
+    }
+
+    @Override
+    public List<Meeting> findBySlotIds(Collection<SlotId> slotIds) {
+        return meetings.values().stream()
+                .filter(meeting -> slotIds.contains(meeting.slotId()))
+                .toList();
     }
 
     public void failOnSave(RuntimeException failure) {
