@@ -29,6 +29,7 @@
     <properties>
         <java.version>25</java.version>
         <springdoc-openapi.version>3.1.0</springdoc-openapi.version>
+        <archunit.version>1.5.0</archunit.version>
         <testcontainers.version>2.0.5</testcontainers.version>
     </properties>
     <dependencies>
@@ -84,6 +85,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <version>${archunit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
