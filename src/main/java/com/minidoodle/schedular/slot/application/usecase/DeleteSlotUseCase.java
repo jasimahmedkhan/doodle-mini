@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 
+/** Deletes a slot only while its state permits modification. */
 @Service
 @Transactional
 public class DeleteSlotUseCase {
@@ -19,6 +20,7 @@ public class DeleteSlotUseCase {
         this.slotRepository = slotRepository;
     }
 
+    /** Rejects deletion of BOOKED slots until their meeting has been cancelled. */
     public void delete(SlotId slotId) {
         Objects.requireNonNull(slotId, "slotId must not be null");
         TimeSlot slot = slotRepository.findById(slotId)

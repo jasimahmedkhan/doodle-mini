@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 
+/** Changes a modifiable slot's time range while preserving the no-overlap invariant. */
 @Service
 @Transactional
 public class UpdateSlotUseCase {
@@ -21,6 +22,7 @@ public class UpdateSlotUseCase {
         this.slotRepository = slotRepository;
     }
 
+    /** Updates the range unless the slot is BOOKED or would overlap another slot. */
     public TimeSlot update(SlotId slotId, TimeRange timeRange) {
         Objects.requireNonNull(slotId, "slotId must not be null");
         Objects.requireNonNull(timeRange, "timeRange must not be null");

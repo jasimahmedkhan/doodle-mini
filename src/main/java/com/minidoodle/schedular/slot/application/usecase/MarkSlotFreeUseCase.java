@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 
+/** Returns a manually BUSY slot to FREE. */
 @Service
 @Transactional
 public class MarkSlotFreeUseCase {
@@ -19,6 +20,7 @@ public class MarkSlotFreeUseCase {
         this.slotRepository = slotRepository;
     }
 
+    /** Applies the BUSY-to-FREE state transition and persists it. */
     public TimeSlot markFree(SlotId slotId) {
         Objects.requireNonNull(slotId, "slotId must not be null");
         TimeSlot slot = slotRepository.findById(slotId)
