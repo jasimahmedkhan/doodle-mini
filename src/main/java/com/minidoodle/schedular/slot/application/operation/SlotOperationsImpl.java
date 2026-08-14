@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 
+/** Keeps cross-module booking calls behind the slot aggregate's state transitions. */
 @Service
 @Transactional
 public class SlotOperationsImpl implements SlotOperations {

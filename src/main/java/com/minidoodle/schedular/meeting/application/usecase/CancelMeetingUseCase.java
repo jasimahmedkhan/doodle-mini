@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 
+/** Deletes a meeting and releases its slot atomically. */
 @Service
 @Transactional
 public class CancelMeetingUseCase {
@@ -22,6 +23,7 @@ public class CancelMeetingUseCase {
         this.slotOperations = slotOperations;
     }
 
+    /** Removes the meeting before returning its BOOKED slot to FREE. */
     public void cancel(MeetingId meetingId) {
         Objects.requireNonNull(meetingId, "meetingId must not be null");
         Meeting meeting = meetingRepository.findById(meetingId)
