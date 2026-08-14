@@ -17,6 +17,30 @@ services:
       timeout: 5s
       retries: 5
 
+  app:
+    build:
+      context: .
+      target: runtime
+    container_name: minidoodle-app
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-minidoodle}
+      DB_USER: ${DB_USER:-minidoodle}
+      DB_PASSWORD: ${DB_PASSWORD:-minidoodle}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      LOG_FORMAT: ${LOG_FORMAT:-logstash}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
 
 volumes:
   pgdata:
