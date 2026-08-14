@@ -7,6 +7,8 @@ import com.minidoodle.schedular.shared.domain.MeetingId;
 import com.minidoodle.schedular.shared.domain.SlotId;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -38,6 +40,17 @@ public class MeetingRepositoryAdapter implements MeetingRepository {
     public Optional<Meeting> findBySlotId(SlotId slotId) {
         return repository.findBySlotId(slotId.value()).map(MeetingRepositoryAdapter::toDomain);
     }
+
+    @Override
+    public List<Meeting> findBySlotIds(Collection<SlotId> slotIds) {
+        if (slotIds.isEmpty()) {
+            return List.of();
+        }
+        return repository.findAllBySlotIdIn(slotIds.stream().map(SlotId::value).toList()).stream()
+                .map(MeetingRepositoryAdapter::toDomain)
+                .toList();
+    }
+
 
     private static MeetingEntity toEntity(Meeting meeting) {
         return new MeetingEntity(
