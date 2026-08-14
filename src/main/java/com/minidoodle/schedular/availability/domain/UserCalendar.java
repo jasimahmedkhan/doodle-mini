@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
+/** Derived availability view over slots. It is calculated on demand and is never persisted. */
 public final class UserCalendar {
 
     private static final Comparator<SlotView> BY_START = Comparator
@@ -40,6 +41,7 @@ public final class UserCalendar {
                     clip(slot.timeRange(), requestedWindow),
                     slot.status()
             );
+            appendOrMerge(result, clipped);
         }
         return new Availability(result);
     }
@@ -54,5 +56,25 @@ public final class UserCalendar {
         return new TimeRange(start, end);
     }
 
+    private static void appendOrMerge(List<AvailabilityRange> result, AvailabilityRange current) {
+        if (result.isEmpty()) {
+            result.add(current);
+            return;
+        }
 
+        int lastIndex = result.size() - 1;
+        AvailabilityRange previous = result.get(lastIndex);
+        boolean sameStatus = previous.status() == current.status();
+        boolean adjacent = previous.timeRange().end().equals(current.timeRange().start());
+
+        if (sameStatus && adjacent) {
+            // Gaps and status changes remain visible; only true adjacency is merged.
+            result.set(lastIndex, new AvailabilityRange(
+                    new TimeRange(previous.timeRange().start(), current.timeRange().end()),
+                    current.status()
+            ));
+        } else {
+            result.add(current);
+        }
+    }
 }
