@@ -3,10 +3,13 @@ package com.minidoodle.schedular.availability.domain;
 import com.minidoodle.schedular.shared.domain.TimeRange;
 
 import java.util.List;
+import java.util.Objects;
 
+/** An ordered, clipped, and merged availability result for one requested window. */
 public record Availability(List<AvailabilityRange> ranges) {
 
     public Availability {
+        Objects.requireNonNull(ranges, "ranges must not be null");
         ranges = List.copyOf(ranges);
     }
 
