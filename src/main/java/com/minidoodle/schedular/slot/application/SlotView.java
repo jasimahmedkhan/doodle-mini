@@ -5,7 +5,10 @@ import com.minidoodle.schedular.shared.domain.TimeRange;
 
 import java.util.Objects;
 
-
+/**
+ * Public read projection for consumers of slot availability.
+ * No slot aggregate or slot-domain type crosses the module boundary.
+ */
 public record SlotView(SlotId slotId, TimeRange timeRange, Status status) {
 
     public SlotView {

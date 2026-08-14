@@ -5,7 +5,9 @@ import com.minidoodle.schedular.shared.domain.UserId;
 import java.time.Instant;
 import java.util.List;
 
+/** Public read contract used by availability without leaking slot-domain objects. */
 public interface SlotAvailabilityQuery {
 
+    /** Returns every slot intersecting the requested window; merging belongs to availability. */
     List<SlotView> findSlots(UserId userId, Instant from, Instant to);
 }

@@ -14,7 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.Objects;
 
-
+/**
+ * Builds a user's complete merged availability for a requested window.
+ * The result is unpaginated because page boundaries would make merging incorrect.
+ */
 @Service
 @Transactional(readOnly = true)
 public class GetAvailabilityUseCase {
@@ -30,6 +33,7 @@ public class GetAvailabilityUseCase {
         this.slotAvailabilityQuery = slotAvailabilityQuery;
     }
 
+    /** Verifies the user, loads intersecting slot projections, then derives the availability view. */
     public Availability get(UserId userId, Instant from, Instant to) {
         Objects.requireNonNull(userId, "userId must not be null");
         TimeRange window = new TimeRange(from, to);
@@ -42,6 +46,7 @@ public class GetAvailabilityUseCase {
         return new UserCalendar(slots).availability(window);
     }
 
+    /** Converts the slot module's public projection into availability's internal domain view. */
     private static SlotView toAvailabilitySlotView(com.minidoodle.schedular.slot.application.SlotView slot) {
         return new SlotView(
                 slot.slotId(),
