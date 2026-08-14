@@ -28,6 +28,7 @@ import java.util.UUID;
 public class SlotController {
 
     private final CreateSlotUseCase createSlot;
+    private final GetSlotUseCase getSlot;
     private final UpdateSlotUseCase updateSlot;
     private final DeleteSlotUseCase deleteSlot;
     private final MarkSlotBusyUseCase markSlotBusy;
@@ -36,6 +37,7 @@ public class SlotController {
 
     public SlotController(
             CreateSlotUseCase createSlot,
+            GetSlotUseCase getSlot,
             UpdateSlotUseCase updateSlot,
             DeleteSlotUseCase deleteSlot,
             MarkSlotBusyUseCase markSlotBusy,
@@ -43,11 +45,24 @@ public class SlotController {
             GetUserUseCase getUser
     ) {
         this.createSlot = createSlot;
+        this.getSlot = getSlot;
         this.updateSlot = updateSlot;
         this.deleteSlot = deleteSlot;
         this.markSlotBusy = markSlotBusy;
         this.markSlotFree = markSlotFree;
         this.getUser = getUser;
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Get info about a slot")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Slot returned",
+                    content = @Content(schema = @Schema(implementation = SlotResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Slot not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public SlotResponse get(@PathVariable UUID id) {
+        return SlotResponse.from(getSlot.get(new SlotId(id)));
     }
 
     @PostMapping
