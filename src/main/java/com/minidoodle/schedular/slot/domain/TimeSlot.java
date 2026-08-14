@@ -4,10 +4,14 @@ import com.minidoodle.schedular.shared.domain.SlotId;
 import com.minidoodle.schedular.shared.domain.TimeRange;
 import com.minidoodle.schedular.shared.domain.UserId;
 import com.minidoodle.schedular.slot.domain.exception.SlotNotBookableException;
+import com.minidoodle.schedular.slot.domain.exception.SlotNotModifiableException;
 
 import java.util.Objects;
 
-
+/**
+ * Slot aggregate root and owner of the FREE/BUSY/BOOKED state machine.
+ * Meeting linkage deliberately lives outside this aggregate; booking is represented only by status.
+ */
 public class TimeSlot {
 
     private final SlotId id;
@@ -67,6 +71,38 @@ public class TimeSlot {
         this.status = SlotStatus.BOOKED;
     }
 
+    public void cancelBooking() {
+        if (status != SlotStatus.BOOKED) {
+            throw new SlotNotBookableException("Only BOOKED slots can have their booking cancelled. Current status: " + status);
+        }
+        this.status = SlotStatus.FREE;
+    }
+
+    public void markBusy() {
+        if (status != SlotStatus.FREE) {
+            throw new SlotNotModifiableException("Only FREE slots can be marked busy. Current status: " + status);
+        }
+        this.status = SlotStatus.BUSY;
+    }
+
+    public void markFree() {
+        if (status != SlotStatus.BUSY) {
+            throw new SlotNotModifiableException("Only BUSY slots can be marked free. Current status: " + status);
+        }
+        this.status = SlotStatus.FREE;
+    }
+
+    public void update(TimeRange newTimeRange) {
+        assertModifiable();
+        this.timeRange = Objects.requireNonNull(newTimeRange, "newTimeRange must not be null");
+    }
+
+    public void assertModifiable() {
+        if (status == SlotStatus.BOOKED) {
+            // The meeting must be cancelled first so the slot and meeting cannot disagree.
+            throw new SlotNotModifiableException("BOOKED slots cannot be modified or deleted until the meeting is cancelled");
+        }
+    }
 
     @Override
     public boolean equals(Object o) {
