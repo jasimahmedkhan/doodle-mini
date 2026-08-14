@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
 CREATE TABLE users (
                        id uuid PRIMARY KEY,
                        name varchar(255) NOT NULL,
@@ -9,9 +11,20 @@ CREATE TABLE time_slot (
                            owner_id uuid NOT NULL REFERENCES users(id),
                            start_ts timestamptz NOT NULL,
                            end_ts timestamptz NOT NULL,
-                           status varchar(16) NOT NULL,
-                           version bigint NOT NULL DEFAULT 0
+                           status varchar(16) NOT NULL CHECK (status IN ('FREE', 'BUSY', 'BOOKED')),
+                           version bigint NOT NULL DEFAULT 0,
+                           CONSTRAINT time_slot_valid_range CHECK (start_ts < end_ts)
 );
+
+CREATE INDEX idx_time_slot_owner_range
+    ON time_slot (owner_id, start_ts, end_ts);
+
+ALTER TABLE time_slot
+    ADD CONSTRAINT time_slot_no_overlap
+    EXCLUDE USING gist (
+        owner_id WITH =,
+        tstzrange(start_ts, end_ts) WITH &&
+    );
 
 CREATE TABLE meeting (
                          id uuid PRIMARY KEY,
