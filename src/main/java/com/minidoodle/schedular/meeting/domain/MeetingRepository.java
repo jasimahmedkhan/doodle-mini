@@ -5,6 +5,7 @@ import com.minidoodle.schedular.shared.domain.SlotId;
 
 import java.util.Optional;
 
+/** Persistence port owned by the meeting domain, not a cross-module API. */
 public interface MeetingRepository {
 
     Optional<Meeting> findById(MeetingId id);

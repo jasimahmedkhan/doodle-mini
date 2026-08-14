@@ -4,7 +4,7 @@ import com.minidoodle.schedular.shared.domain.UserId;
 
 import java.util.Optional;
 
-/** Persistence port owned by the user domain, infrastructure layer implements it. */
+/** Persistence port owned by the user domain, not a cross-module API. */
 public interface UserRepository {
 
     boolean existsById(UserId id);

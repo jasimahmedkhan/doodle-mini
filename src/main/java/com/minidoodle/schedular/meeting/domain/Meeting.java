@@ -6,6 +6,10 @@ import com.minidoodle.schedular.shared.domain.SlotId;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Meeting aggregate linked to a slot by SlotId only.
+ * Participants are embedded contact details and are not required to be registered users.
+ */
 public class Meeting {
 
     private final MeetingId id;
@@ -15,8 +19,8 @@ public class Meeting {
     private final List<Participant> participants;
 
     public Meeting(MeetingId id, SlotId slotId, String title, String description, List<Participant> participants) {
-        this.id = id;
-        this.slotId = slotId;
+        this.id = Objects.requireNonNull(id, "id must not be null");
+        this.slotId = Objects.requireNonNull(slotId, "slotId must not be null");
         this.title = validateTitle(title);
         this.description = description;
         this.participants = validateParticipants(participants);
@@ -27,10 +31,17 @@ public class Meeting {
     }
 
     private static String validateTitle(String title) {
+        if (title == null || title.isBlank()) {
+            throw new IllegalArgumentException("title is required");
+        }
+        if (title.length() > 200) {
+            throw new IllegalArgumentException("title must not exceed 200 characters");
+        }
         return title;
     }
 
     private static List<Participant> validateParticipants(List<Participant> participants) {
+        Objects.requireNonNull(participants, "participants must not be null");
         if (participants.isEmpty()) {
             throw new IllegalArgumentException("at least one participant is required");
         }
